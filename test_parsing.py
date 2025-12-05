@@ -7,7 +7,7 @@ HEADERS = {
     'User-Agent': "WebScrapper 1.0 (Contact: fernandorevengaperez@gmail.com)"
 }
 
-def fetch_and_parse_table(url):
+def fetch_and_parse_table(url, keyword_identifier, aux_one = ""):
     """Performs the HTTP request and finds the main results table."""
     print(f"Getting data in: {url}")
 
@@ -22,16 +22,21 @@ def fetch_and_parse_table(url):
 
     soup = BeautifulSoup(html_content, 'html.parser')
 
-    medal_table = None
+    results_table = None
     all_wikitables = soup.find_all('table', class_='wikitable')
     for table in all_wikitables:
-        if table.find('th', string='Gold'):
-            results_table = table
-            break
+        if table.find('th', string = keyword_identifier):
+
+            if aux_one:
+                if table.find('th', string = aux_one):
+                    results_table = table
+                    break
+                else:
+                    continue
 
     if results_table is None:
         print("❌ ERROR: Medal table not found. Could not find a 'wikitable' with 'Gold' header.")
-        return []
+        return [], None
     
     extracted_data = []
     rows = results_table.find_all('tr')
@@ -51,6 +56,6 @@ def fetch_and_parse_table(url):
     return extracted_data, results_table
 
 
-data, results_converted = fetch_and_parse_table(PAGE_URL)
+data, results_converted = fetch_and_parse_table(PAGE_URL, "Gold", "Event")
 
 print(f"This is the table: {results_converted}")
