@@ -7,6 +7,23 @@ HEADERS = {
     'User-Agent': "WebScrapper 1.0 (Contact: fernandorevengaperez@gmail.com)"
 }
 
+def is_table_a_match(table, keyword_identifier, aux_one=""):
+
+    def find_flexible(table_element, target_keyword):
+        target_lower = target_keyword.lower()
+
+        return table_element.find('th', 
+                                  string = lambda t: t and target_lower in t.lower())
+    
+    if not find_flexible(table, keyword_identifier):
+        return False
+    
+    if aux_one:
+        if not find_flexible(table, aux_one):
+            return False
+
+    return True
+
 def fetch_and_parse_table(url, keyword_identifier, aux_one = ""):
     """Performs the HTTP request and finds the main results table."""
     print(f"Getting data in: {url}")
@@ -24,15 +41,12 @@ def fetch_and_parse_table(url, keyword_identifier, aux_one = ""):
 
     results_table = None
     all_wikitables = soup.find_all('table', class_='wikitable')
+    
     for table in all_wikitables:
-        if table.find('th', string = keyword_identifier):
-
-            if aux_one:
-                if table.find('th', string = aux_one):
-                    results_table = table
-                    break
-                else:
-                    continue
+        
+        if is_table_a_match(table, keyword_identifier, aux_one):
+            results_table = table
+            break
 
     if results_table is None:
         print("❌ ERROR: Medal table not found. Could not find a 'wikitable' with 'Gold' header.")
@@ -56,6 +70,6 @@ def fetch_and_parse_table(url, keyword_identifier, aux_one = ""):
     return extracted_data, results_table
 
 
-data, results_converted = fetch_and_parse_table(PAGE_URL, "Gold", "Event")
+data, results_converted = fetch_and_parse_table(PAGE_URL, "Gold")
 
 print(f"This is the table: {results_converted}")
