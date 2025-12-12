@@ -8,6 +8,19 @@ HEADERS = {
 }
 
 def is_table_a_match(table, keyword_identifier, aux_one=""):
+    """
+    Checks if the HTML table contains the required headers using a robust, flexible search.
+
+    This function is core to identifying the correct 'wikitable' among many on the page.
+
+    Args:
+        table (BeautifulSoup Tag): The <table> object to inspect.
+        keyword_identifier (str): The primary header the table MUST contain (e.g., "Gold").
+        aux_one (str, optional): The secondary header for double-filtering (e.g., "Event").
+
+    Returns:
+        bool: True if the table meets the filtering criteria, False otherwise.
+    """
 
     def find_flexible(table_element, target_keyword):
         target_lower = target_keyword.lower()
@@ -25,7 +38,18 @@ def is_table_a_match(table, keyword_identifier, aux_one=""):
     return True
 
 def fetch_and_parse_table(url, keyword_identifier, aux_one = ""):
-    """Performs the HTTP request and finds the main results table."""
+    """
+    Performs the HTTP request and applies the robust filter to find the results table.
+
+    Args:
+        url (str): URL of the Wikipedia page.
+        keyword_identifier (str): Primary header for the filter function.
+        aux_one (str, optional): Secondary header for the double-filter.
+
+    Returns:
+        BeautifulSoup Tag: The results table if found, or None on error/not found.
+    """
+
     print(f"Getting data in: {url}")
 
     try:
@@ -51,25 +75,23 @@ def fetch_and_parse_table(url, keyword_identifier, aux_one = ""):
     if results_table is None:
         print("❌ ERROR: Medal table not found. Could not find a 'wikitable' with 'Gold' header.")
         return [], None
-    
-    extracted_data = []
-    rows = results_table.find_all('tr')
 
-    print(f"Table found with {len(rows)} rows. Extracting first 5 for testing...")
-
-    for i, row in enumerate(rows):
-        if i >= 5 and i > 0:
-            break
-        cells = row.find_all(['td', 'th'])
-
-        if cells:
-            cleaned_values = [cell.text.strip() for cell in cells if cell.text.strip()]
-            if len(cleaned_values) > 3:
-                extracted_data.append(cleaned_values)
-
-    return extracted_data, results_table
+    return results_table
 
 
-data, results_converted = fetch_and_parse_table(PAGE_URL, "Gold")
+results_converted = fetch_and_parse_table(PAGE_URL, "Gold", "Event")
 
 print(f"This is the table: {results_converted}")
+
+def extract_and_clean_data(results_table):
+    rows = results_table.find_all('tr')
+    if not rows:
+        return []
+
+    header_columns = rows[0].find_all('th')
+
+    return header_columns
+
+header_columns = extract_and_clean_data(results_converted)
+
+print(f"Those are the columns: {header_columns}")
