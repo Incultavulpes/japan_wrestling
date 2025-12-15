@@ -89,8 +89,14 @@ def extract_and_clean_data(results_table):
         return []
 
     header_columns = rows[0].find_all('th')
+    cleaned_text = ""
+    cleaned_columns = []
 
-    return header_columns
+    for head in header_columns:
+        cleaned_text = head.get_text(strip="True")
+        cleaned_columns.append(cleaned_text)
+
+    return cleaned_columns
 
 header_columns = extract_and_clean_data(results_converted)
 
