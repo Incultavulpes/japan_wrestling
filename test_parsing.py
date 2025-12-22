@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+from prettytable import PrettyTable
 
 PAGE_URL = "https://en.wikipedia.org/wiki/Wrestling_at_the_2024_Summer_Olympics"
 
@@ -150,5 +151,18 @@ def extract_and_clean_data(results_table):
 
 full_table, header_columns = extract_and_clean_data(results_converted)
 
+def visual_table(header_columns, full_table):
+    auxiliary_list = []
+    tidy_table = PrettyTable(header_columns)
+    for i in range(len(full_table)-1):
+        if len(full_table[i+1]) < len(header_columns):
+            auxiliary_list = full_table[i+1]
+            auxiliary_list.append("MISSING_VALUE")
+            tidy_table.add_row(auxiliary_list)
+        else:
+            tidy_table.add_row(full_table[i+1])
+    return tidy_table
+
 print(f"Those are the columns: {header_columns}")
 print(f"The fullnes of our table now: {full_table}")
+print(f"{visual_table(header_columns, full_table)}")
