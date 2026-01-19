@@ -8,42 +8,32 @@ HEADERS = {
     'User-Agent': "WebScrapper 1.0 (Contact: fernandorevengaperez@gmail.com)"
 }
 
-def is_table_a_match(table, keyword_identifier, aux_one=""):
+def is_table_a_match(table, keyword_header, aux_header="", signature_data=""):
     """
-    Checks if an HTML table contains specific headers using a flexible search.
-
-    Args:
-        table (bs4.Tag): The <table> object to inspect.
-        keyword_identifier (str): Primary header required (e.g., "Gold").
-        aux_one (str, optional): Secondary header for validation (e.g., "Event").
-
-    Returns:
-        bool: True if criteria are met, False otherwise.
-
-    Note on Architecture:
-        This function uses a nested helper 'find_flexible'. While this causes the 
-        helper to be redefined on every call, it was intentionally chosen to 
-        achieve 'Fortress Encapsulation.' By nesting the logic, we ensure the 
-        internal search mechanics do not pollute the global namespace and 
-        remain inaccessible to other parts of the script.
+    Improved matcher that handles nested HTML (links, spans) 
+    by checking the 'get_text()' of the tag instead of just the string node.
     """
-
-    def find_flexible(table_element, target_keyword):
+    def find_flexible(table_element, target_keyword, tag_to_search):
         target_lower = target_keyword.lower()
-
-        return table_element.find('th', 
-                                  string = lambda t: t and target_lower in t.lower())
+        # Instead of 'string=', we pass a function as the first argument to find()
+        # This allows us to check the flattened text of the tag itself.
+        return table_element.find(lambda tag: tag.name == tag_to_search and 
+                                 target_lower in tag.get_text().lower())
     
-    if not find_flexible(table, keyword_identifier):
+    # 1. Structural Check
+    if not find_flexible(table, keyword_header, 'th'):
         return False
-    
-    if aux_one:
-        if not find_flexible(table, aux_one):
+    if aux_header and not find_flexible(table, aux_header, 'th'):
+        return False
+
+    # 2. Signature Check (The Yasmani Check)
+    if signature_data:
+        if not find_flexible(table, signature_data, 'td'):
             return False
 
     return True
 
-def fetch_and_parse_table(url, keyword_identifier, aux_one = ""):
+def fetch_and_parse_table(url, keyword_identifier, aux_one = "", signature_data=""):
     """
     Performs the HTTP request and applies the robust filter to find the results table.
 
@@ -74,7 +64,7 @@ def fetch_and_parse_table(url, keyword_identifier, aux_one = ""):
     
     for table in all_wikitables:
         
-        if is_table_a_match(table, keyword_identifier, aux_one):
+        if is_table_a_match(table, keyword_identifier, aux_one, signature_data):
             results_table = table
             break
 
@@ -85,7 +75,7 @@ def fetch_and_parse_table(url, keyword_identifier, aux_one = ""):
     return results_table
 
 
-results_converted = fetch_and_parse_table(PAGE_URL, "Event", "Gold")
+results_converted = fetch_and_parse_table(PAGE_URL, "Event", "Gold", "Akari Fujinami")
 
 print(f"This is the table: {results_converted}")
 
