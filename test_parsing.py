@@ -2,8 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 from prettytable import PrettyTable
 
-PAGE_URL = "https://en.wikipedia.org/wiki/Wrestling_at_the_2024_Summer_Olympics"
-
 HEADERS = {
     'User-Agent': "WebScrapper 1.0 (Contact: fernandorevengaperez@gmail.com)"
 }
@@ -74,8 +72,14 @@ def fetch_and_parse_table(url, keyword_identifier, aux_one = "", signature_data=
 
     return results_table
 
+# Asking parameters
 
-results_converted = fetch_and_parse_table(PAGE_URL, "Event", "Gold", "Akari Fujinami")
+PAGE_URL = input("Enter direction:")
+header_one = input("Enter the header one:")
+header_two = input("Enter the header two:")
+signa_data = input("Enter the signature data:")
+
+results_converted = fetch_and_parse_table(PAGE_URL, header_one, header_two, signa_data)
 
 print(f"This is the table: {results_converted}")
 
