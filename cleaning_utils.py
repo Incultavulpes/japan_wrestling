@@ -2,6 +2,24 @@ import pandas as pd
 import re
 import os
 
+def saving_data(df, file_name):
+    output_folder = os.path.join("data", "processed")
+
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+        print(f"Created directory: {output_folder}")
+
+    output_filename = file_name
+    save_path = os.path.join(output_folder, output_filename)
+
+    df.to_csv(save_path, index=False, encoding="utf-8")
+
+    print("-" * 30)
+    print(f"SUCCESS: Data saved to {save_path}")
+    print("-" * 30)
+
+    return save_path
+
 def split_name(text):
     """
     Identifies the boundary between a lowercase name and an uppercase country
@@ -42,3 +60,8 @@ else:
 
 print(df)
 
+file_name = input("If willing to save the file enter the file name, if you don't, please, press the enter key  ")
+if file_name:
+    if not file_name.lower().endswith(".csv"):
+        file_name += ".csv"
+    saving_data(df, file_name)
