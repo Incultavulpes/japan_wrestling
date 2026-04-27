@@ -55,4 +55,8 @@ for wrapper in all_tables:
 
 # 4. Create the DataFrame
 df_uww = pd.DataFrame(data_list)
-print(df_uww.head())
+
+# --- DEBUGGING SECTION ---
+print("\n--- Pipeline Audit ---")
+print(f"Total Athletes Scraped: {len(df_uww)}")
+print(f"Categories Found: {df_uww['Weight Class'].unique()}")
