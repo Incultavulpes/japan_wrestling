@@ -22,4 +22,22 @@ def tell_data(file_handle, file_type):
 file_handle = input("Enter the file handle ")
 file_type = input("Enter the file type ")
 
-tell_data(file_handle, file_type)
+def retrieve_data(file_handle, file_type):
+    if file_type.lower() == "uww":
+        usual_path = os.path.join("data", "uww_raw")
+    elif file_type.lower() == "wikipedia":
+        usual_path = os.path.join("data", "processed")
+    else:
+        print("Non existing file type")
+        return None
+
+    if os.path.isfile(os.path.join(usual_path, file_handle)):
+        df = pand.read_csv(os.path.join(usual_path, file_handle))
+        return df
+    else:
+        print("Non existing file handle, run the script again")
+
+df = retrieve_data(file_handle, file_type)
+
+print("Data frame given directly")
+print(df)
