@@ -39,5 +39,12 @@ def retrieve_data(file_handle, file_type):
 
 df = retrieve_data(file_handle, file_type)
 
-print("Data frame given directly")
+def trim_world(data_frame):
+    data_frame = data_frame[data_frame["Rank"] < 5]
+    data_frame = data_frame.drop(columns = ["Points"])
+    return data_frame
+
+if file_type.lower() == "uww":
+    df = trim_world(df)
+
 print(df)
