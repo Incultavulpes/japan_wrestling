@@ -42,6 +42,7 @@ df = retrieve_data(file_handle, file_type)
 def trim_world(data_frame):
     data_frame = data_frame[data_frame["Rank"] < 5]
     data_frame = data_frame.drop(columns = ["Points"])
+    data_frame["Weight Class"] = data_frame["Weight Class"].str.strip("FS") + " kg"
     return data_frame
 
 if file_type.lower() == "uww":
