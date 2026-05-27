@@ -45,7 +45,12 @@ def trim_world(data_frame):
     data_frame["Weight Class"] = data_frame["Weight Class"].str.strip("FS") + " kg"
     return data_frame
 
+def wikipedia_trim(data_frame):
+    return data_frame
+
 if file_type.lower() == "uww":
     df = trim_world(df)
+elif file_type.lower() == "wikipedia":
+    df = wikipedia_trim(df)
 
 print(df)
