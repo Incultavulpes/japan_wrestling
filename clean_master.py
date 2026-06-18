@@ -37,6 +37,8 @@ def wikipedia_trim(data_frame):
         "Georgia": "GEO", "Turkey": "TUR"
     }
 
+    REGEX_COUNTRY = re.compile(r'([a-z])([A-Z][a-zA-Z\s]*)$')
+
     def split_athlete_and_country(raw_string):
         """
         Splits 'Gable StevesonUnited States' -> 'Gable Steveson', 'USA'
@@ -46,7 +48,7 @@ def wikipedia_trim(data_frame):
             return "", ""
     
         # Updated Regex: capturing multi-word uppercase starting countries with spaces
-        match = re.search(r'([a-z])([A-Z][a-zA-Z\s]*)$', raw_string)
+        match = REGEX_COUNTRY.search(raw_string)
         if match:
             split_idx = match.start(2)
             athlete = raw_string[:split_idx].strip()
