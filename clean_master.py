@@ -115,3 +115,46 @@ if df is not None:
     print(df)
 else:
     print("Pipeline execution failed due to empty or missing dataset.")
+
+def save_data(df, file_type):
+    """
+    Saves the provided DataFrame to a CSV file in the data/raw directory.
+    Prompts the user for a filename and ensures proper formatting and encoding.
+    """
+    try:
+        filename = input("Choose the saving name: ")
+        
+        # Ensure the filename has the correct extension
+        if not filename.lower().endswith(".csv"):
+            filename += ".csv"
+            
+        # Define and create the directory structure
+        if file_type.lower() == "wikipedia":
+            folder_path = os.path.join("data", "silver", "wikipedia")
+            os.makedirs(folder_path, exist_ok=True)
+            # Combine folder and filename for the final destination
+            saving_path = os.path.join(folder_path, filename)
+            # Write to disk
+            df.to_csv(saving_path, index=False, encoding="utf-8")
+        elif file_type.lower() == "uww":
+            folder_path = os.path.join("data", "silver", "uww")
+            os.makedirs(folder_path, exist_ok=True)
+            # Combine folder and filename for the final destination
+            saving_path = os.path.join(folder_path, filename)
+            # Write to disk
+            df.to_csv(saving_path, index=False, encoding="utf-8")
+        else:
+            return False
+    
+        print(f"SUCCESS: Data saved to {saving_path}")
+        return True
+        
+    except Exception as e:
+        print(f"ERROR: Failed to save data. Details: {e}")
+        return False
+
+if not df.empty:
+    flag_saver = input("Do you want to save the file? Press enter if you don't wish to")
+    if flag_saver:
+        save_data(df, file_type)
+
