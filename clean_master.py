@@ -34,10 +34,10 @@ def wikipedia_trim(data_frame):
         "UnitedStates": "USA", "Japan": "JPN", "India": "IND", "Kazakhstan": "KAZ",
         "ROC": "ROC", "Azerbaijan": "AZE", "Iran": "IRI", "Belarus": "BLR",
         "Uzbekistan": "UZB", "SanMarino": "SMR", "Cuba": "CUB", "Italy": "ITA",
-        "Georgia": "GEO", "Turkey": "TUR"
+        "Georgia": "GEO", "Turkey": "TUR", "Russia": "RUS", "Romania": "ROU"
     }
 
-    REGEX_COUNTRY = re.compile(r'([a-z])([A-Z][a-zA-Z\s]*)$')
+    REGEX_COUNTRY = re.compile(r'(\w)([A-Z][a-zA-Z\s]*)$', flags=re.UNICODE)
 
     def split_athlete_and_country(raw_string):
         """
@@ -98,24 +98,6 @@ def wikipedia_trim(data_frame):
     
     return final_df
 
-
-# --- Standard Core Execution Flow ---
-file_handle = input("Enter the file handle: ")
-file_type = input("Enter the file type (uww/wikipedia): ")
-
-df = retrieve_data(file_handle, file_type)
-
-if df is not None:
-    if file_type.lower() == "uww":
-        df = trim_world(df)
-    elif file_type.lower() == "wikipedia":
-        df = wikipedia_trim(df)
-
-    print("\n--- Processed Silver Data Output ---")
-    print(df)
-else:
-    print("Pipeline execution failed due to empty or missing dataset.")
-
 def save_data(df, file_type):
     """
     Saves the provided DataFrame to a CSV file in the data/raw directory.
@@ -153,8 +135,26 @@ def save_data(df, file_type):
         print(f"ERROR: Failed to save data. Details: {e}")
         return False
 
-if not df.empty:
-    flag_saver = input("Do you want to save the file? Press enter if you don't wish to")
-    if flag_saver:
-        save_data(df, file_type)
+def execution_flow_clean_master():
+    # --- Standard Core Execution Flow ---
+    file_handle = input("Enter the file handle: ")
+    file_type = input("Enter the file type (uww/wikipedia): ")
+
+    df = retrieve_data(file_handle, file_type)
+
+    if df is not None:
+        if file_type.lower() == "uww":
+            df = trim_world(df)
+        elif file_type.lower() == "wikipedia":
+            df = wikipedia_trim(df)
+
+        print("\n--- Processed Silver Data Output ---")
+        print(df)
+    else:
+        print("Pipeline execution failed due to empty or missing dataset.")
+
+    if not df.empty:
+        flag_saver = input("Do you want to save the file? Press enter if you don't wish to")
+        if flag_saver:
+            save_data(df, file_type)
 
