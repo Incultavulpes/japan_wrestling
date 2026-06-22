@@ -157,27 +157,6 @@ def visual_table(header_columns, full_table):
         tidy_table.add_row(row)
     return tidy_table
 
-# --- MAIN EXECUTION ---
-# Collect user inputs to make the script adaptable to any Wikipedia page
-PAGE_URL = input("Enter Wikipedia URL: ")
-header_one = input("Enter primary header (e.g., Event): ")
-header_two = input("Enter secondary header (e.g., Gold): ")
-signa_data = input("Enter signature data (e.g., Athlete Name): ")
-
-# Step 1: Find the table
-results_converted = fetch_and_parse_table(PAGE_URL, header_one, header_two, signa_data)
-
-# Step 2: Extract and display if a match was found
-if results_converted:
-    full_table, header_columns = extract_and_clean_data(results_converted)
-    
-    print(f"\nSuccessfully extracted {len(full_table)} rows.")
-    print(visual_table(header_columns, full_table))
-else:
-    print("Execution halted: Table not found.")
-
-df = pd.DataFrame(full_table, columns=header_columns)
-
 def save_data(df):
     """
     Saves the provided DataFrame to a CSV file in the data/raw directory.
@@ -207,7 +186,29 @@ def save_data(df):
         print(f"ERROR: Failed to save data. Details: {e}")
         return False
 
-if not df.empty:
-    flag_saver = input("Do you want to save the file? Press enter if you don't wish to")
-    if flag_saver:
-        save_data(df)
+def wikipedia_main_scraper_block():
+    # --- MAIN EXECUTION ---
+    # Collect user inputs to make the script adaptable to any Wikipedia page
+    PAGE_URL = input("Enter Wikipedia URL: ")
+    header_one = input("Enter primary header (e.g., Event): ")
+    header_two = input("Enter secondary header (e.g., Gold): ")
+    signa_data = input("Enter signature data (e.g., Athlete Name): ")
+
+    # Step 1: Find the table
+    results_converted = fetch_and_parse_table(PAGE_URL, header_one, header_two, signa_data)
+
+    # Step 2: Extract and display if a match was found
+    if results_converted:
+        full_table, header_columns = extract_and_clean_data(results_converted)
+        
+        print(f"\nSuccessfully extracted {len(full_table)} rows.")
+        print(visual_table(header_columns, full_table))
+    else:
+        print("Execution halted: Table not found.")
+
+    df = pd.DataFrame(full_table, columns=header_columns)
+
+    if not df.empty:
+        flag_saver = input("Do you want to save the file? Press enter if you don't wish to")
+        if flag_saver:
+            save_data(df)
