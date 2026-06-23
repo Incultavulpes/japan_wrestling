@@ -135,10 +135,10 @@ def save_data(df, file_type):
         print(f"ERROR: Failed to save data. Details: {e}")
         return False
 
-def execution_flow_clean_master():
+def execution_flow_clean_master(file_type):
     # --- Standard Core Execution Flow ---
     file_handle = input("Enter the file handle: ")
-    file_type = input("Enter the file type (uww/wikipedia): ")
+    # file_type = input("Enter the file type (uww/wikipedia): ")
 
     df = retrieve_data(file_handle, file_type)
 

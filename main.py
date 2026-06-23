@@ -1,6 +1,6 @@
-import uww_scraper as uww_scraper
+import uww_scraper
 import test_parsing as wikipedia_scraper
-import clean_master as clean_master
+import clean_master
 
 print("==============================================")
 print("   JAPAN WRESTLING PIPELINE MANAGEMENT SYSTEM ")
@@ -21,8 +21,10 @@ if choice == "1":
 elif choice == "2":
     wikipedia_scraper.wikipedia_main_scraper_block()
 elif choice == "3":
-    clean_master.execution_flow_clean_master()
+    file_type = "uww"
+    clean_master.execution_flow_clean_master(file_type)
 elif choice == "4":
-    clean_master.execution_flow_clean_master()
+    file_type = "wikipedia"
+    clean_master.execution_flow_clean_master(file_type)
 else:
     print("❌ Invalid entry selection. Shutting down pipeline execution environment.")
