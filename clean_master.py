@@ -34,10 +34,16 @@ def wikipedia_trim(data_frame):
         "UnitedStates": "USA", "Japan": "JPN", "India": "IND", "Kazakhstan": "KAZ",
         "ROC": "ROC", "Azerbaijan": "AZE", "Iran": "IRI", "Belarus": "BLR",
         "Uzbekistan": "UZB", "SanMarino": "SMR", "Cuba": "CUB", "Italy": "ITA",
-        "Georgia": "GEO", "Turkey": "TUR", "Russia": "RUS", "Romania": "ROU"
+        "Georgia": "GEO", "Turkey": "TUR", "Russia": "RUS", "Romania": "ROU", 
+        "NorthKorea": "PRK", "Hungary": "HUN", "PuertoRico": "PRI", "Ukraine": "UKR",
+        "Slovakia": "SVK", "Bulgaria": "BGR", "Kyrgyzstan": "KGZ", "Tajikistan": "TJK",
+        "SouthKorea": "KOR"
     }
 
     REGEX_COUNTRY = re.compile(r'(\w)([A-Z][a-zA-Z\s]*)$', flags=re.UNICODE)
+    # New robust regex pattern to extract 2 or 3 digits followed by optional spaces and 'kg'
+    # This automatically leaves behind junk like '[c]' and 'details'
+    REGEX_WEIGHT = re.compile(r'(\d{2,3})\s*(kg)', flags=re.IGNORECASE)
 
     def split_athlete_and_country(raw_string):
         """
@@ -72,9 +78,17 @@ def wikipedia_trim(data_frame):
     records = data_frame.to_dict(orient="records")
 
     for row in records:
-        # Clean the weight class string: '57 kgdetails' -> '57 kg'
-        weight_class = str(row['Event']).replace("details", "").strip()
-    
+        raw_event = str(row['Event'])
+        
+        # --- NEW DETERMINISTIC EXTRACTION ENGINE ---
+        weight_match = REGEX_WEIGHT.search(raw_event)
+        if weight_match:
+            # Reconstruct clean token: Group 1 (digits) + ' ' + Group 2 ('kg')
+            weight_class = f"{weight_match.group(1)} {weight_match.group(2).lower()}"
+        else:
+            # Fallback block to guard script robustness
+            weight_class = raw_event.strip()
+
         if weight_class not in processed_events:
             # First encounter: Extract Gold (Rank 1), Silver (Rank 2), and 1st Bronze (Rank 3)
             processed_events[weight_class] = True
