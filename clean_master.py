@@ -37,7 +37,8 @@ def wikipedia_trim(data_frame):
         "Georgia": "GEO", "Turkey": "TUR", "Russia": "RUS", "Romania": "ROU", 
         "NorthKorea": "PRK", "Hungary": "HUN", "PuertoRico": "PRI", "Ukraine": "UKR",
         "Slovakia": "SVK", "Bulgaria": "BGR", "Kyrgyzstan": "KGZ", "Tajikistan": "TJK",
-        "SouthKorea": "KOR"
+        "SouthKorea": "KOR", "Greece": "GRC", "Macedonia": "MKD", "Canada": "CAN",
+        "SovietUnion": "SUN", "Belgium": "BEL", "Finland": "FIN"
     }
 
     REGEX_COUNTRY = re.compile(r'(\w)([A-Z][a-zA-Z\s]*)$', flags=re.UNICODE)
@@ -73,12 +74,14 @@ def wikipedia_trim(data_frame):
     data_accumulator = []
     processed_events = {}
 
+    col_first = data_frame.columns[0]
+
     # 3. Process the DataFrame in-memory by converting rows to native dictionaries
     # This preserves your custom unrolling logic without secondary I/O reads.
     records = data_frame.to_dict(orient="records")
 
     for row in records:
-        raw_event = str(row['Event'])
+        raw_event = str(row[col_first])
         
         # --- NEW DETERMINISTIC EXTRACTION ENGINE ---
         weight_match = REGEX_WEIGHT.search(raw_event)
@@ -86,8 +89,11 @@ def wikipedia_trim(data_frame):
             # Reconstruct clean token: Group 1 (digits) + ' ' + Group 2 ('kg')
             weight_class = f"{weight_match.group(1)} {weight_match.group(2).lower()}"
         else:
-            # Fallback block to guard script robustness
-            weight_class = raw_event.strip()
+            # Fallback for historical named categories (e.g., "Flyweight details" -> "Flyweight")
+            cleaned_event = raw_event.replace("details", "").strip()
+            
+            # Title-case it so "flyweight" and "Flyweight" match identically
+            weight_class = cleaned_event.title()
 
         if weight_class not in processed_events:
             # First encounter: Extract Gold (Rank 1), Silver (Rank 2), and 1st Bronze (Rank 3)
