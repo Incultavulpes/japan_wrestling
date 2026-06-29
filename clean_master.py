@@ -38,10 +38,13 @@ def wikipedia_trim(data_frame):
         "NorthKorea": "PRK", "Hungary": "HUN", "PuertoRico": "PRI", "Ukraine": "UKR",
         "Slovakia": "SVK", "Bulgaria": "BGR", "Kyrgyzstan": "KGZ", "Tajikistan": "TJK",
         "SouthKorea": "KOR", "Greece": "GRC", "Macedonia": "MKD", "Canada": "CAN",
-        "SovietUnion": "SUN", "Belgium": "BEL", "Finland": "FIN"
+        "SovietUnion": "SUN", "Belgium": "BEL", "Finland": "FIN", "Germany": "DEU",
+        "Armenia": "ARM", "UnifiedTeam": "UNI", "EastGermany": "DDR", "Yugoslavia": "YUG",
+        "Czechoslovakia": "CSK", "Syria": "SYR", "WestGermany": "DEU", 
+        "GreatBritain": "GBR"
     }
 
-    REGEX_COUNTRY = re.compile(r'(\w)([A-Z][a-zA-Z\s]*)$', flags=re.UNICODE)
+    REGEX_COUNTRY = re.compile(r'.*(\w)([A-Z][a-zA-Z\s]*)$', flags=re.UNICODE)
     # New robust regex pattern to extract 2 or 3 digits followed by optional spaces and 'kg'
     # This automatically leaves behind junk like '[c]' and 'details'
     REGEX_WEIGHT = re.compile(r'(\d{2,3})\s*(kg)', flags=re.IGNORECASE)
