@@ -41,7 +41,16 @@ def wikipedia_trim(data_frame):
         "SovietUnion": "SUN", "Belgium": "BEL", "Finland": "FIN", "Germany": "DEU",
         "Armenia": "ARM", "UnifiedTeam": "UNI", "EastGermany": "DDR", "Yugoslavia": "YUG",
         "Czechoslovakia": "CSK", "Syria": "SYR", "WestGermany": "DEU", 
-        "GreatBritain": "GBR"
+        "GreatBritain": "GBR", "Poland": "POL", "Mongolia": "MNG", "Sweden": "SWE",
+        "France": "FRA", "UnitedTeamofGermany": "DEU", "Pakistan": "PAK",
+        "Australia": "AUS", "Switzerland": "CHE", "Estonia": "EST", "Austria": "AUT",
+        "Denmark": "DNK", "Norway": "NOR"
+    }
+
+    weight_map = {
+        "Flyweight": "52 kg", "Bantamweight": "57 kg", "Featherweight": "63 kg",
+        "Lightweight": "70 kg", "Welterweight": "78 kg", "Middleweight": "87 kg",
+        "Light Heavyweight": "97 kg", "Heavyweight": "+97 kg"
     }
 
     REGEX_COUNTRY = re.compile(r'.*(\w)([A-Z][a-zA-Z\s]*)$', flags=re.UNICODE)
@@ -97,6 +106,10 @@ def wikipedia_trim(data_frame):
             
             # Title-case it so "flyweight" and "Flyweight" match identically
             weight_class = cleaned_event.title()
+            # Translate the weight to a numerical string here
+            for key_flag in weight_map:
+                if key_flag == weight_class:
+                    weight_class = weight_map[key_flag]
 
         if weight_class not in processed_events:
             # First encounter: Extract Gold (Rank 1), Silver (Rank 2), and 1st Bronze (Rank 3)
