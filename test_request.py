@@ -115,5 +115,3 @@ def get_provisional_weight_class():
         if user_response.lower() == "yes":
             save_data("silver", current_year, master_df)
     return master_df
- 
-get_provisional_weight_class()
