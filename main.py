@@ -1,4 +1,4 @@
-import uww_scraper
+import test_request
 import test_parsing as wikipedia_scraper
 import clean_master
 
@@ -6,12 +6,13 @@ while True:
     print("==============================================")
     print("   JAPAN WRESTLING PIPELINE MANAGEMENT SYSTEM ")
     print("==============================================")
-    print(" [INGESTION LAYER / RAW ZONE]")
-    print("  1 - Run UWW Live Web Scraper")
-    print("  2 - Run Wikipedia Live Web Scraper")
-    print("\n [TRANSFORMATION LAYER / SILVER ZONE]")
-    print("  3 - Process & Clean Saved UWW Dataset")
-    print("  4 - Process & Clean Saved Wikipedia Dataset")
+    print(" [CONSOLIDATED PIPELINES (BRONZE + SILVER)]")
+    print("  1 - Run UWW API Ingestion & Cleaning Loop")
+    
+    print("\n [STAGED PIPELINES (BATCH EXTRACT / TRANSFORM)]")
+    print("  2 - Extract Wikipedia Raw Data (Bronze)")
+    print("  3 - Process & Clean Wikipedia Dataset (Silver)")
+    
     print("\n [SYSTEM CONTROL]")
     print("  0 - Exit Pipeline Environment")
     print("==============================================")
@@ -20,17 +21,15 @@ while True:
     print("----------------------------------------------")
 
     if choice == "1":
-        uww_scraper.uww_main_scraper_block()
+        # This single execution now drops files into both data/uww_raw and data/silver/uww
+        test_request.get_provisional_weight_class()
     elif choice == "2":
         wikipedia_scraper.wikipedia_main_scraper_block()
     elif choice == "3":
-        file_type = "uww"
-        clean_master.execution_flow_clean_master(file_type)
-    elif choice == "4":
         file_type = "wikipedia"
         clean_master.execution_flow_clean_master(file_type)
     elif choice == "0":
         print("👋 Shutting down pipeline execution environment. Goodbye!")
         break
     else:
-        print("❌ Invalid entry selection. Shutting down pipeline execution environment.")
+        print("❌ Invalid entry selection. Please choose a valid profile.")
