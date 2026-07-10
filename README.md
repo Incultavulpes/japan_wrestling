@@ -39,13 +39,13 @@ The structural foundation of this system is modeled on a local Medallion Archite
 
     **The Architecture**: It performs an atomic runtime pass. It writes the intermediate raw schema directly to the Bronze Zone for long-term historical audit trails, while simultaneously running vectorized array mutations to join, clean, and output the standardized master dataset straight into the Silver Zone. This completely eliminates unnecessary disk I/O bottlenecks.pass.
 
-* **Wikipedia Track (Symmetric Batch Processing):** Unlike the UWW track, Wikipedia relies on loose HTML document styling. Capturing data here requires deep Document Object Model (DOM) traversal, targeting unstable wikitable classes and generic table data (<td>) tags that can change or break based on manual user edits.
-    **The Implementation**: To enforce strict system reliability, this track uses a classic decoupled batch configuration following a Fail-Fast architecture.
-
-    **The Architecture**: * Stage 1 (Ingestion): The web scraper pulls raw, messy textual strings directly from the live DOM layout and dumps them directly into the Bronze Zone as a localized snapshot. No parsing or cleaning happens here; the goal is simply data preservation.
-
-        Stage 2 (Transformation): A completely isolated, downstream execution script imports the raw data from disk and runs extensive Regular Expression (re) pattern matching to clean corrupted strings, filter outliers, map column types, and export a pristine dataset to the Silver Zone. If an upstream structural layout changes mid-season, only Stage 1 breaks—leaving your downstream historical transformations safely isolated.
-
+* **Wikipedia Track (Symmetric Batch Processing):** Unlike the UWW track, Wikipedia relies on loose HTML document styling. Capturing data here requires deep Document Object Model (DOM) traversal, targeting unstable `wikitable` classes and generic table data (`<td>`) tags that can change or break based on manual user edits.
+  
+  **The Implementation:** To enforce strict system reliability, this track uses a classic decoupled batch configuration following a Fail-Fast architecture.
+  
+  **The Architecture:**
+  * **Stage 1 (Ingestion):** The web scraper pulls raw, messy textual strings directly from the live DOM layout and dumps them directly into the Bronze Zone as a localized snapshot. No parsing or cleaning happens here; the goal is simply data preservation.
+  * **Stage 2 (Transformation):** A completely isolated, downstream execution script imports the raw data from disk and runs extensive Regular Expression (`re`) pattern matching to clean corrupted strings, filter outliers, map column types, and export a pristine dataset to the Silver Zone. If an upstream structural layout changes mid-season, only Stage 1 breaks—leaving your downstream historical transformations safely isolated.
 ---
 
 ## 🚀 Key Engineering & System Design Decisions
@@ -67,8 +67,10 @@ Memory Isolation: Utilized explicit data replication via .copy() when filtering 
 ---
 
 ## 📁 Data Lakehouse Organization (Medallion Layout)
+
 * The physical directory structure mirrors the Medallion separation, using standardized naming conventions and explicit file partitioning:
 
+```text
 data/
 ├── uww_raw/                              <-- Bronze Zone: Raw JSON Extraction Splits
 │   ├── uww_2024_57kg_raw_results.csv
@@ -85,12 +87,14 @@ data/
     └── wikipedia/
         ├── 2000_wikipedia_clean_results.csv
         └── ...
-
+```
 ---
 
 ## ⚙️ Operational Profiles (CLI Execution)
+
 * A user guide detailing how to spin up `main.py` and interact with the asymmetric operational terminal execution profiles.
 
+```text
 ==============================================
    JAPAN WRESTLING PIPELINE MANAGEMENT SYSTEM 
 ==============================================
@@ -105,7 +109,8 @@ data/
   0 - Exit Pipeline Environment
 ==============================================
 
-* EXECUTION CONTEXT
-Profile 1: Triggers the atomic UWW pipeline, querying multi-year targets via REST, backing up raw files to the Bronze zone, and mapping standard columns to a master Silver schema.
+```
 
-Profiles 2 & 3: Isolates the decoupled batch phases required for HTML-parsed data tables, allowing independent raw storage dumps or separate transformation routines.
+**Profile 1**: Triggers the atomic UWW pipeline, querying multi-year targets via REST, backing up raw files to the Bronze zone, and mapping standard columns to a master Silver schema.
+
+**Profiles 2 & 3**: Isolates the decoupled batch phases required for HTML-parsed data tables, allowing independent raw storage dumps or separate transformation routines.
