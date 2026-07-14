@@ -107,17 +107,13 @@ def get_provisional():
 
     clean_df['Weight Class'] = "92 kg"
 
-    # 2 & 3. Rename the existing columns to your target standard
     clean_df = clean_df.rename(columns={
         'rank': 'Rank',
         'person.displayname.fullname': 'Athlete',
         'person.noc': 'Country'
     })
 
-    # 4. Filter down to your exact 4 standard columns (dropping uwwPoints and season)
     standard_df = clean_df[['Weight Class', 'Rank', 'Athlete', 'Country']].copy()
-
-    # 5. Sort by Rank and grab the top 4
     standard_df = standard_df.sort_values(by='Rank')
     top_4 = standard_df.head(4)
 
@@ -198,17 +194,13 @@ def get_provisional_weight_class():
             if user_response.lower() == "yes":
                 save_data("bronze", current_year, clean_df, class_weight)
 
-            # 2 & 3. Rename the existing columns to your target standard
             clean_df = clean_df.rename(columns={
                 'rank': 'Rank',
                 'person.displayname.fullname': 'Athlete',
                 'person.noc': 'Country'
             })
 
-            # 4. Filter down to your exact 4 standard columns (dropping uwwPoints and season)
             standard_df = clean_df[['Weight Class', 'Rank', 'Athlete', 'Country']].copy()
-
-            # 5. Sort by Rank and grab the top 4
             standard_df = standard_df.sort_values(by='Rank')
             top_four = standard_df.head(4)
             all_records.append(top_four)
