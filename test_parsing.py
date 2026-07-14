@@ -1,3 +1,30 @@
+"""Wikipedia Tabular DOM Parser and Bronze Ingestion Engine.
+
+This module acts as the Track 2 ingestion pipeline for the Japan Wrestling 
+Pipeline Management System (WPMS). It targets and extracts tabular data from 
+Wikipedia articles ('class=wikitable') based on structural parameters (headers) 
+and content signatures (specific row data). 
+
+Once located, the module converts raw HTML DOM nodes into flattened rectangular 
+datasets, resolving complex nested row and column spans before committing the 
+untransformed data to the Bronze lakehouse storage layer.
+
+Key Engineering Features:
+    * **Heuristic Table Identification**: Filters candidate tables using a 
+        multi-stage matching system checking for presence of primary headers, 
+        secondary headers, and unique td signature values.
+    * **Virtual Grid Normalization Algorithm**: Solves HTML rowspan and 
+        colspan rendering structures. It utilizes a temporal state tracker 
+        ('rowspan_tracker') to simulate cell dimensions in memory, ensuring 
+        unaligned source tables are mapped to perfectly aligned 2D grids.
+    * **Interactive Target Slicing**: Exposes CLI variables to customize the 
+        scraper target URL and DOM match filters dynamically at runtime.
+
+Data Storage Zone:
+    * **Bronze Layer**: Persists raw, untransformed table extractions as 
+        UTF-8 CSVs directly to the 'data/raw/' directory.
+"""
+
 import requests
 from bs4 import BeautifulSoup
 from prettytable import PrettyTable
@@ -23,6 +50,7 @@ def is_table_a_match(table, keyword_header, aux_header="", signature_data=""):
     Returns:
         bool: True if all provided criteria are found within the table.
     """
+
     def find_flexible(table_element, target_keyword, tag_to_search):
         """
         Nested helper that uses a lambda to search for text within specific tags,
@@ -60,6 +88,7 @@ def fetch_and_parse_table(url, keyword_identifier, aux_one="", signature_data=""
         bs4.Tag: The matching <table> object, or None if no match is found.
     ```python
     """
+
     print(f"Searching for data at: {url}")
 
     try:
@@ -94,6 +123,7 @@ def extract_and_clean_data(results_table):
     Returns:
         tuple: (all_data [list of lists], initial_headers [list of strings])
     """
+
     if results_table is None:
         return [], []
 
@@ -149,19 +179,46 @@ def extract_and_clean_data(results_table):
     return all_data, initial_headers
 
 def visual_table(header_columns, full_table):
+    """Converts raw structured data into a PrettyTable object for terminal display.
+
+    This presentation utility takes aligned 2D tabular arrays and packages them 
+    into a structured ASCII grid. It is primarily used during debugging and CLI 
+    execution to provide clean, scannable console visualization of scraped tables.
+
+    Args:
+        header_columns (list of str): The column names or field labels to serve 
+            as the table's top-level header row.
+        full_table (list of lists): The 2D array representing the data records 
+            to populate the table, where each sublist represents a single row.
+
+    Returns:
+        prettytable.PrettyTable: A formatted grid object ready to be printed 
+            directly to the terminal console.
     """
-    Converts raw data into a PrettyTable object for terminal display.
-    """
+
     tidy_table = PrettyTable(header_columns)
     for row in full_table:
         tidy_table.add_row(row)
     return tidy_table
 
 def save_data(df):
+    """Saves the extracted raw DataFrame to a CSV file in the Bronze storage tier.
+
+    Prompts the user interactively for a target filename, guarantees a compliant 
+    '.csv' file extension format, dynamically creates the target destination 
+    directory structure if missing, and safely serializes the DataFrame to disk 
+    using standard UTF-8 encoding. Captures and handles all disk I/O or filesystem 
+    exceptions defensively to prevent application crashes.
+
+    Args:
+        df (pandas.DataFrame): The structured, raw tabular dataset parsed 
+            from the matched Wikipedia table.
+
+    Returns:
+        bool: True if the file was successfully committed to disk, False if 
+            any exception occurred during directory creation or file writing.
     """
-    Saves the provided DataFrame to a CSV file in the data/raw directory.
-    Prompts the user for a filename and ensures proper formatting and encoding.
-    """
+
     try:
         filename = input("Choose the saving name: ")
         
@@ -187,6 +244,28 @@ def save_data(df):
         return False
 
 def wikipedia_main_scraper_block():
+    """Orchestrates the interactive terminal flow to scrape and save a Wikipedia table.
+
+    This function acts as the execution wrapper for the Track 2 (Wikipedia) pipeline. 
+    It dynamically prompts the user for URL and table matching parameters, coordinates 
+    the DOM search and parsing sequence, previews the aligned results in the console, 
+    and optionally routes the raw tabular dataset to the Bronze local storage layer.
+
+    User Inputs (CLI Prompts):
+        PAGE_URL (str): The destination Wikipedia page URL.
+        header_one (str): The primary header key required in the target table (<th>).
+        header_two (str): An optional secondary header key for stricter column validation (<th>).
+        signa_data (str): An optional row-level value used to verify a target table's content (<td>).
+        flag_saver (str): Any non-empty input at the final prompt triggers the file write sequence.
+
+    Side Effects:
+        - Writes console status updates and ASCII previews using PrettyTable.
+        - Prompts the user for a filename and saves a raw UTF-8 CSV to the 'data/raw' directory.
+
+    Returns:
+        None
+    """
+
     # --- MAIN EXECUTION ---
     # Collect user inputs to make the script adaptable to any Wikipedia page
     PAGE_URL = input("Enter Wikipedia URL: ")
