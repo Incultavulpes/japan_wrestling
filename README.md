@@ -114,3 +114,37 @@ data/
 **Profile 1**: Triggers the atomic UWW pipeline, querying multi-year targets via REST, backing up raw files to the Bronze zone, and mapping standard columns to a master Silver schema.
 
 **Profiles 2 & 3**: Isolates the decoupled batch phases required for HTML-parsed data tables, allowing independent raw storage dumps or separate transformation routines.
+
+## 📖 Tutorial: Scraping Wikipedia Tables (Track 2)
+
+The Wikipedia parser (`test_parsing.py`) is designed to be highly flexible. Instead of hardcoding selectors, it uses **structural heuristics** (headers and unique data signatures) to locate the exact table you want, even if a page has dozens of tables.
+
+This short guide demonstrates how to target and successfully capture a specific table.
+
+---
+
+### 🔍 The Core Concept
+
+To target a table, you need to provide the scraper with three identifiers:
+1. **Primary Header (`header_one`)**: A column title that *must* exist in the table (e.g., `Event` or `Rank`).
+2. **Secondary Header (`header_two`)** *(Optional)*: Another column title to narrow down the search (e.g., `Gold` or `Country`).
+3. **Signature Data (`signa_data`)** *(Optional)*: A unique piece of text in a data row (like an athlete's name) to confirm the scraper has grabbed the correct table.
+
+---
+
+### 🛠️ Step-by-Step Example
+
+Let's say we want to scrape the **"Men's freestyle"** medalists table from a Wikipedia tournament page.
+
+#### 1. Identify Your Target in the Browser
+Open your target Wikipedia page and locate the table. Inspect its structure:
+
+* **Target URL**: `https://en.wikipedia.org/wiki/Wrestling_at_the_2024_Summer_Olympics`
+* **Look at the table headers (`<th>`)**: We see columns like `Event`, `Gold`, `Silver`, and `Bronze`.
+* **Look at the table data (`<td>`)**: We see wrestler names like `Higuchi` or `Kiyooka`.
+
+#### 2. Run the Orchestrator
+Launch the pipeline and select **Option 2** to initiate the raw Wikipedia extraction:
+
+```bash
+python main.py
