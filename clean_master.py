@@ -12,7 +12,7 @@ Operational Architecture & Legacy Profiles:
       codes, normalizes weight categories, and formats the output into an active, 
       clean 4-column schema.
     * **Track 1 (UWW - Legacy/Manual Fallback)**: The automated live UWW pipeline 
-      is fully self-enclosed within `uww_scraper.py` (which handles ingestion 
+      is fully self-enclosed within `test_request.py` (which handles ingestion 
       and normalization together). The UWW cleaning functions in this module 
       (`trim_world`) are preserved here as **legacy utilities** to support manual 
       adhoc transformations or historical data cleaning runs if needed.
@@ -307,7 +307,7 @@ def execution_flow_clean_master(file_type):
         * **Legacy/Manual Fallback (UWW)**: Runs the legacy `trim_world` contract on 
           offline raw UWW data. Note that standard automated Track 1 runs bypass this 
           entire module, handling ingestion and normalization natively within the 
-          dedicated `uww_scraper.py`.
+          dedicated `test_request.py`.
 
     Args:
         file_type (str): The target pipeline track. Must be 'uww' or 'wikipedia' 
