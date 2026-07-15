@@ -1,9 +1,59 @@
+"""Japan Wrestling Pipeline Silver Transformation & Cleaning Engine.
+
+This module acts as the centralized Silver-tier compiler for the data lakehouse. 
+It ingests raw, unstructured Bronze CSV files from local disk, normalizes 
+schemas to enforce rigid data contracts, resolves regional naming variations, 
+and serializes clean outputs to their respective Silver-tier directories.
+
+Operational Architecture & Legacy Profiles:
+    * **Track 2 (Wikipedia - Active Core)**: Cleans HTML-extracted data. It parses 
+      complex structures where multiple athletes are crammed into a single cell, 
+      splits athlete names from their country tags, maps countries to ISO 3-letter 
+      codes, normalizes weight categories, and formats the output into an active, 
+      clean 4-column schema.
+    * **Track 1 (UWW - Legacy/Manual Fallback)**: The automated live UWW pipeline 
+      is fully self-enclosed within `uww_scraper.py` (which handles ingestion 
+      and normalization together). The UWW cleaning functions in this module 
+      (`trim_world`) are preserved here as **legacy utilities** to support manual 
+      adhoc transformations or historical data cleaning runs if needed.
+
+Data Processing Contracts (Silver Schema):
+    All finalized Silver-tier datasets produced by this module conform to:
+    `["Weight Class", "Rank", "Athlete", "Country"]`
+
+Directory Structure Mapping:
+    * **Sources (Bronze)**:
+        - Wikipedia Raw: `data/raw/`
+        - UWW Raw: `data/uww_raw/`
+    * **Destinations (Silver)**:
+        - Wikipedia Cleaned: `data/silver/wikipedia/`
+        - UWW Cleaned: `data/silver/uww/`
+"""
+
 import pandas as pand
 import os.path
 import re
 
-# Data retriever
 def retrieve_data(file_handle, file_type):
+    """Dynamically resolves paths and loads a raw Bronze dataset into memory.
+
+    This function acts as the disk ingestion layer of the cleaning pipeline. 
+    It dynamically routes the file lookup based on the source platform type, 
+    verifies file existence on the local storage partition, and safely loads 
+    the raw CSV into a pandas DataFrame.
+
+    Args:
+        file_handle (str): The filename (including extension, e.g., 'paris_2024.csv') 
+            to be fetched from disk.
+        file_type (str): The data pipeline source designation. Must be either 
+            'uww' or 'wikipedia' (case-insensitive) to determine the base directory path.
+
+    Returns:
+        pandas.DataFrame or None: Returns the loaded dataset as a DataFrame 
+            if the file exists and is readable; returns None if the path resolution 
+            or file verification fails.
+    """
+
     if file_type.lower() == "uww":
         usual_path = os.path.join("data", "uww_raw")
     elif file_type.lower() == "wikipedia":
@@ -20,16 +70,73 @@ def retrieve_data(file_handle, file_type):
         print("Non existing file handle, run the script again")
         return None
 
-# UWW contract
 def trim_world(data_frame):
+    """Enforces the Silver-tier data contract on raw UWW Bronze datasets.
+
+    NOTE (Legacy Architecture): This function serves as a manual, adhoc fallback 
+    utility. While active automated pipelines consolidate this step directly within 
+    the core extraction modules, this function remains supported to manually clean 
+    and format legacy or historical offline UWW raw extractions.
+
+    Transformations Applied:
+        1. **Rank Filtering**: Discards matches where the athlete's final placing 
+           is 5th or lower, preserving only the medal-winning tiers (Ranks 1 to 4).
+        2. **Column Pruning**: Drops the non-contract 'Points' column to match the 
+           unified Silver schema.
+        3. **Weight Normalization**: Strips the 'FS' (Freestyle) signifier from 
+           the 'Weight Class' string and appends the unified ' kg' suffix 
+           (e.g., '74FS' -> '74 kg').
+
+    Args:
+        data_frame (pandas.DataFrame): The raw Bronze UWW DataFrame containing 
+            the columns 'Weight Class', 'Rank', 'Athlete', 'Country', and 'Points'.
+
+    Returns:
+        pandas.DataFrame: The normalized Silver-compliant DataFrame restricted 
+            strictly to the top four placements.
+    """
+
     data_frame = data_frame[data_frame["Rank"] < 5]
     data_frame = data_frame.drop(columns = ["Points"])
     data_frame["Weight Class"] = data_frame["Weight Class"].str.strip("FS") + " kg"
     return data_frame
 
-# Wikipedia contract
 def wikipedia_trim(data_frame):
-    # 1. ISO 3-Letter Country Map
+    """Normalizes raw Wikipedia tournament data into a clean, unrolled Silver dataset.
+
+    This engine is the core transformation layer for Track 2. It converts unstructured 
+    and non-standardized Wikipedia tables into a clean, normalized schema. It handles 
+    irregular cell structures, parses combined athlete/country strings, maps country names 
+    to ISO 3-letter codes, normalizes diverse weight class nomenclatures, and handles 
+    wrestling's double-bronze-medal structure.
+
+    Detailed Processing Stages:
+        1. **Country & Athlete Parsing**: Uses a nested regular expression engine to 
+           separate adjacent text strings (e.g., "Gable StevesonUnited States" into 
+           "Gable Steveson" and "USA" using a custom 3-letter ISO mapping).
+        2. **Weight Class Standardization**: Employs a deterministic extraction engine 
+           using regular expressions to convert mixed strings (like "120 kg[c]" or "55kg") 
+           into "120 kg". Falls back to an lookup dictionary for older named categories 
+           (e.g., "Lightweight" -> "70 kg").
+        3. **Double-Bronze State-Machine Unrolling**: 
+           In Olympic/World wrestling tournament layouts, identical weight classes are 
+           split across adjacent rows to account for two bronze medal paths. 
+           This module tracks previously encountered weight categories in-memory:
+            - **First Encounter**: Appends Gold (Rank 1), Silver (Rank 2), and 
+              the first Bronze (Rank 3).
+            - **Second Encounter**: Skips the duplicate Gold/Silver cells and extracts 
+              the second Bronze (Rank 4).
+
+    Args:
+        data_frame (pandas.DataFrame): The raw, scraped Wikipedia DataFrame containing 
+            columns matching the medal structure (typically columns starting with the 
+            weight class event, followed by 'Gold', 'Silver', and 'Bronze').
+
+    Returns:
+        pandas.DataFrame: The restructured, sorted, and completely standardized 
+            Silver dataset conforming to: `["Weight Class", "Rank", "Athlete", "Country"]`.
+    """
+
     country_map = {
         "UnitedStates": "USA", "Japan": "JPN", "India": "IND", "Kazakhstan": "KAZ",
         "ROC": "ROC", "Azerbaijan": "AZE", "Iran": "IRI", "Belarus": "BLR",
@@ -89,7 +196,6 @@ def wikipedia_trim(data_frame):
     col_first = data_frame.columns[0]
 
     # 3. Process the DataFrame in-memory by converting rows to native dictionaries
-    # This preserves your custom unrolling logic without secondary I/O reads.
     records = data_frame.to_dict(orient="records")
 
     for row in records:
@@ -135,10 +241,26 @@ def wikipedia_trim(data_frame):
     return final_df
 
 def save_data(df, file_type):
+    """Saves the normalized DataFrame to a CSV file in the Silver storage tier.
+
+    Prompts the user interactively for a target filename, guarantees a compliant 
+    '.csv' file extension, and dynamically routes the output directory based on the 
+    data source pipeline type. If the target folders do not exist on the filesystem, 
+    they are created on the fly before executing a safe, UTF-8 encoded serialization.
+
+    Args:
+        df (pandas.DataFrame): The standardized Silver-compliant DataFrame 
+            ready for storage.
+        file_type (str): The data pipeline source designation. Must be either 
+            'uww' or 'wikipedia' (case-insensitive) to resolve the destination 
+            directory branch.
+
+    Returns:
+        bool: True if the file was successfully committed to disk, False if 
+            the 'file_type' is invalid or if an exception occurred during 
+            directory creation/file writing.
     """
-    Saves the provided DataFrame to a CSV file in the data/raw directory.
-    Prompts the user for a filename and ensures proper formatting and encoding.
-    """
+
     try:
         filename = input("Choose the saving name: ")
         
@@ -172,6 +294,40 @@ def save_data(df, file_type):
         return False
 
 def execution_flow_clean_master(file_type):
+    """Orchestrates the terminal-based Silver cleaning pipeline for a selected track.
+
+    This function acts as the execution wrapper called by the main menu (main.py) 
+    to manage Silver-tier transformations. It handles both the active Wikipedia 
+    cleaning pipeline and the legacy, manual UWW utility path.
+
+    Pipeline Routing Profiles:
+        * **Active Core (Wikipedia)**: Standard transformation workflow. Ingests raw 
+          scraped tables, applies heuristic parsing rules, unrolls the double-bronze 
+          medal structure, and serializes the structured schema to Silver storage.
+        * **Legacy/Manual Fallback (UWW)**: Runs the legacy `trim_world` contract on 
+          offline raw UWW data. Note that standard automated Track 1 runs bypass this 
+          entire module, handling ingestion and normalization natively within the 
+          dedicated `uww_scraper.py`.
+
+    Args:
+        file_type (str): The target pipeline track. Must be 'uww' or 'wikipedia' 
+            (case-insensitive), which dictates both the directory routing and 
+            the specific cleaning rules applied.
+
+    User Inputs (CLI Prompts):
+        file_handle (str): The filename of the raw CSV file to clean (e.g., 'paris_2024.csv').
+        flag_saver (str): Entering any non-empty input at the final saving prompt 
+            initiates the file-writing process.
+
+    Side Effects:
+        - Prompts the user via terminal inputs.
+        - Prints data previews and pipeline execution messages to the console.
+        - Triggers file writes to the 'data/silver/' subdirectory hierarchy.
+
+    Returns:
+        None
+    """
+
     # --- Standard Core Execution Flow ---
     file_handle = input("Enter the file handle: ")
     # file_type = input("Enter the file type (uww/wikipedia): ")
